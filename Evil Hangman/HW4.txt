@@ -1,0 +1,160 @@
+// class HangmanManager is used to keep track of the state of the rigged
+// version of the game called Hangman, instead of the Hangman game, this
+// class picks the words along with the user choices of letters during the
+// game instead of picking the words in the beginning
+
+import java.util.*;
+
+public class HangmanManager {
+   private Set<String> currentWords;            
+   private SortedSet<Character> letterGuessed;  
+   private int remainGuess;  
+   private String currentPattern; 
+   
+   // pre : given length is not less than one 
+   //       (throws an IllegalArgumentException if not) && 
+   //       given max is not less than zero
+   //       (throws an IllegalArgumentException if not)
+   // post: assigns the remain guesses with the given max value, constructs the
+   //       initial pattern of words, and constructs a list of words with all
+   //       given length from the given list dictionary
+   public HangmanManager(Collection<String> dictionary, int length, int max) {
+      if (length < 1 || max < 0) {
+         throw new IllegalArgumentException();
+      }
+      remainGuess = max;
+      currentWords = new TreeSet<String>();
+      letterGuessed = new TreeSet<Character>();
+      currentPattern = "";
+      for (int i = 0; i < length; i++) {
+         currentPattern += "- ";
+      }
+      currentPattern = currentPattern.substring(0, 
+            currentPattern.length() - 1);
+      for (String words : dictionary) {
+         if (words.length() == length) {
+            currentWords.add(words);
+         }
+      }
+   }
+   
+   // post: returns current set of words
+   public Set<String> words() {
+      return currentWords;
+   }
+   
+   // post: returns the guesses left for the game 
+   public int guessesLeft() {
+      return remainGuess;
+   }
+   
+   // post: returns the current set of letters passed
+   public SortedSet<Character> guesses() {
+      return letterGuessed;
+   }
+   
+   // pre : current set of words is not empty 
+   //       (throws an IllegalStateException is not)
+   // post: returns the current patterns to be shown for
+   //       the game with guesses have been made
+   public String pattern() {
+      if (currentWords.isEmpty()) {
+         throw new IllegalStateException();
+      }
+      return currentPattern;
+   }
+   
+   // pre : remain guesses is at least one 
+   //       (throws an IllegalStatementException if not) &&
+   //       the current set of words is not empty 
+   //       (throws and IllegalStatementException if not) &&
+   //       the current set of words is not empty and the given guess
+   //       is not guessed before (throws an IllegalArgumentException if not)
+   // post: returns the number of occurences of the given guess letter in the 
+   //       updated pattern, update the number of guess left, and decides the 
+   //       set of words to use going forward
+   public int record(char guess) {
+      if (currentWords.isEmpty() || remainGuess < 1) {
+         throw new IllegalStateException();
+      }
+      if (!currentWords.isEmpty() && letterGuessed.contains(guess)) {
+         throw new IllegalArgumentException();
+      }
+      SortedMap<String, SortedSet<String>> wordsManager = 
+            new TreeMap<String, SortedSet<String>>();
+      letterGuessed.add(guess);      
+      for (String words : currentWords) {
+         setPattern(words, guess);
+         if (!wordsManager.containsKey(currentPattern)) {
+            wordsManager.put(currentPattern, new TreeSet<String>());
+         }
+         wordsManager.get(currentPattern).add(words);
+      } 
+      currentPattern = updatePattern(wordsManager);
+      currentWords = wordsManager.get(currentPattern);
+      return occurence(guess);
+   }
+   
+   // post: sets the patterns with the information from
+   //       the given words and guess
+   private void setPattern(String words, char guess) {
+      currentPattern = "";
+      for (int i = 0; i < words.length(); i++) {
+         if (letterGuessed.contains(words.charAt(i))) {
+            currentPattern = currentPattern + words.charAt(i) + " ";
+         } else {
+            currentPattern += "- ";
+         }
+      }
+      currentPattern = currentPattern.substring(0, 
+            currentPattern.length() - 1);
+   }
+   
+   // post: returns the updated version of pattern which has the
+   //       most words set in the given wordsManager
+   private String updatePattern(SortedMap<String, SortedSet<String>> 
+         wordsManager) {
+      String newPattern = "";
+      int biggestSize = 0;
+      for (String wordsPattern : wordsManager.keySet()) {
+         if (wordsManager.get(wordsPattern).size() > biggestSize) {
+            biggestSize = wordsManager.get(wordsPattern).size();
+            newPattern = wordsPattern;
+         }
+      }
+      return newPattern;
+   }
+   
+   // post: returns the number of occurences of the given guess in
+   //       the current pattern   
+   private int occurence(char guess) {
+      int occurences = 0;
+      for (int i = 0; i < currentPattern.length(); i++) {
+         if (currentPattern.charAt(i) == guess) {
+            occurences++;
+         }
+      }
+      if (occurences == 0) {
+         remainGuess--;
+      }
+      return occurences;
+   }
+}
+      
+      
+            
+                     
+         
+            
+      
+      
+      
+   
+   
+   
+   
+   
+   
+   
+
+      
