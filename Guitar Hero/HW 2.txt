@@ -1,0 +1,129 @@
+1st: GuitarString.java
+
+import java.util.*;
+ 
+public class GuitarString {
+   private Queue<Double> ringBuffer;  
+   private int ringBufferCapacity;
+   
+   public static final double ENERGY_DECAY = 0.996;    
+   
+   // pre : ringBufferCapacity >= 2 (throw IllegalArgumentException if not) &&
+   //       frequency > 0 (throw IllegalArgumentException if not)
+   // post: constructs a guitar string with the given frequency, and 
+   //       initialize the ring buffer
+   public GuitarString(double frequency) {
+      ringBufferCapacity = (int)Math.round(StdAudio.SAMPLE_RATE / frequency);
+      checkCapacity(ringBufferCapacity);
+      if (frequency <= 0) {
+         throw new IllegalArgumentException();
+      }
+      ringBuffer = new LinkedList<Double>();
+      for (int i = 0; i < ringBufferCapacity; i++) {
+         ringBuffer.add(0.0);
+      } 
+   }
+   
+   // pre : init.length >= 2 (throw IllegalArgumentException if not)
+   // post: constructs a guitar string and initialize the ring buffer with
+   //       values in the given array 
+   public GuitarString(double[] init) {
+      checkCapacity(init.length);
+      ringBuffer = new LinkedList<Double>();
+      for (int i = 0; i < init.length; i++) {
+         ringBuffer.add(init[i]);
+      }
+   }
+   
+   // post: modifies the ring buffer with random values
+   public void pluck() {
+      for (int i = 0; i < ringBufferCapacity; i++) {
+         double randomValue = Math.random() - 0.5;
+         ringBuffer.remove();
+         ringBuffer.add(randomValue);
+      } 
+   }
+   
+   // post: perform one update of Karplus-Strong with ring buffer
+   public void tic() {
+      double pastPeek = ringBuffer.remove();
+      double currentPeek = ringBuffer.peek();
+      ringBuffer.add(0.5 * (pastPeek + currentPeek) * ENERGY_DECAY);
+   }
+   
+   // post: returns the current sample of the ring buffer
+   public double sample() {
+      return this.ringBuffer.peek();
+   }
+   
+   // post: throw an IllegalArgumentException if ringBufferCapacity is less than two
+   private void checkCapacity(int ringBufferCapacity) {
+      if (ringBufferCapacity < 2) {
+         throw new IllegalArgumentException();
+      }
+   }  
+}
+
+2nd: Guitar37.java
+
+public class Guitar37 implements Guitar {
+   private GuitarString[] guitarString;   // list of GuitarString
+   private int ticCount;                  // count of times tic is called
+   
+   public static final int DEFAULT_CAPACITY = 37;
+    
+   public static final String KEYBOARD =
+         "q2we4r5ty7u8i9op-[=zxdcfvgbnjmk,.;/' ";  // keyboard layout
+   
+   // post: constructs a list of GuitarString       
+   public Guitar37() {
+      guitarString = new GuitarString[DEFAULT_CAPACITY];
+      for (int i = 0; i < DEFAULT_CAPACITY; i++) {
+         guitarString[i] = new GuitarString(440.0 * Math.pow(2, (double)(i - 24) / 12));
+      } 
+   }
+   
+   // post: plays the corresponding note with the given pitch
+   public void playNote(int pitch) {
+      if (pitch >= -24 && pitch <= 12) {
+         guitarString[pitch + 24].pluck();
+      }
+   }
+   
+   // post: returns true if the given string is in the KEYBOARD; false otherwise
+   public boolean hasString(char string) {
+      return KEYBOARD.indexOf(string) != -1; 
+   }
+   
+   // pre : given string is in the KEYBOARD(throw an IllegalArgumentException if not)
+   // post: plays the note of the pluck with the given string
+   public void pluck(char string) {
+      if (KEYBOARD.indexOf(string) == -1) {
+         throw new IllegalArgumentException();
+      }
+      guitarString[KEYBOARD.indexOf(string)].pluck();
+   }
+   
+   // post: counts the total sample sum of all the notes 
+   public double sample() {
+      double sampleSum = 0.0;
+      for (int i = 0; i < DEFAULT_CAPACITY; i++) {
+         sampleSum += guitarString[i].sample();
+      }
+      return sampleSum;
+   }
+   
+   // post: applies the Karplus-Strong update once for all the notes
+   public void tic() {
+      for (int i = 0; i < DEFAULT_CAPACITY; i++) {
+         guitarString[i].tic();
+      }
+      ticCount++;
+   }
+   
+   // post: returns the total count of times tic is called
+   public int time() {
+      return ticCount;
+   }
+}
+
