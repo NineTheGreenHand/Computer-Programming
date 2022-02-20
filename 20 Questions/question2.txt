@@ -1,0 +1,22 @@
+Q:
+Is it fruit?
+Q:
+Color yellow?
+A:
+orange
+A:
+apple
+Q:
+Is it orange?
+Q:
+opop?
+A:
+op
+A:
+orange
+Q:
+does it meow?
+A:
+cat
+A:
+computer
